@@ -1,0 +1,12 @@
+[
+    // Aici vor fi salvate automat livrările finalizate de către aplicație, dacă se implementează exportul.
+    // Exemplu structură:
+    // {
+    //   "eventName": "Nunta Popescu",
+    //   "address": "Str. Florilor 10, București",
+    //   "deliveryTime": "2025-06-14T17:08:00",
+    //   "returnTime": "2025-06-19T17:08:00", // opțional
+    //   "status": "delivered",
+    //   "deliveredAt": "2025-06-14T18:00:00"
+    // }
+] 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panou Comenzi Livrări</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="orders-grid" class="orders-grid"></div>
+        
+        <button id="add-order-btn" class="add-order-btn">➕</button>
+        <button id="open-history-btn" class="history-btn"><i class="fa-solid fa-database"></i> Deschide istoric livrări</button>
+    </div>
+
+    <!-- Modal pentru adăugare comandă -->
+    <div id="add-order-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Adaugă comandă nouă</h2>
+            <form id="add-order-form">
+                <div class="form-group">
+                    <label for="event-name">Nume eveniment:</label>
+                    <input type="text" id="event-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="delivery-address">Adresă livrare:</label>
+                    <input type="text" id="delivery-address" required>
+                </div>
+                <div class="form-group">
+                    <label for="delivery-time">Data și ora livrării:</label>
+                    <input type="datetime-local" id="delivery-time" required>
+                </div>
+                <button type="submit" class="submit-btn">Salvează</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pentru editare comandă -->
+    <div id="edit-order-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Editează comandă</h2>
+            <form id="edit-order-form">
+                <input type="hidden" id="edit-order-id">
+                <div class="form-group">
+                    <label for="edit-event-name">Nume eveniment:</label>
+                    <input type="text" id="edit-event-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-delivery-address">Adresă livrare:</label>
+                    <input type="text" id="edit-delivery-address" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-delivery-time">Data și ora livrării:</label>
+                    <input type="datetime-local" id="edit-delivery-time" required>
+                </div>
+                <button type="submit" class="submit-btn">Salvează modificările</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pentru confirmare livrare -->
+    <div id="delivery-modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmare livrare</h2>
+            <p>Este necesară ridicarea comenzii (retur)?</p>
+            <div class="modal-buttons">
+                <button id="confirm-with-return" class="modal-btn">DA</button>
+                <button id="confirm-without-return" class="modal-btn">NU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pentru programare retur -->
+    <div id="return-modal" class="modal">
+        <div class="modal-content">
+            <h2>Programare ridicare</h2>
+            <form id="return-form">
+                <div class="form-group">
+                    <label for="return-address">Adresă ridicare:</label>
+                    <input type="text" id="return-address" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="return-time">Data și ora ridicării:</label>
+                    <input type="datetime-local" id="return-time" required>
+                </div>
+                <button type="submit" class="submit-btn">Confirmă</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pentru istoric livrări -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content history-modal-content">
+            <span class="close-btn" id="close-history-modal">&times;</span>
+            <h2>Istoric livrări</h2>
+            <div id="history-table-container"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

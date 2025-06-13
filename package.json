@@ -1,0 +1,15 @@
+{
+  "name": "panou-comenzi-livrari",
+  "version": "1.0.0",
+  "description": "Aplicație desktop pentru gestionarea comenzilor de livrare și ridicare.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.3",
+    "electron-packager": "^17.1.2"
+  }
+}
