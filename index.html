@@ -7,9 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -42,6 +39,38 @@
         </div>
     </div>
 
+    <!-- Modal pentru confirmare livrare -->
+    <div id="delivery-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Confirmare livrare</h2>
+            <div class="form-group">
+                <p>Doriți să programați și ridicarea comenzii?</p>
+                <button id="confirm-with-return" class="submit-btn">Da, programează ridicare</button>
+                <button id="confirm-without-return" class="submit-btn">Nu, doar livrare</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pentru programare ridicare -->
+    <div id="return-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Programare ridicare</h2>
+            <form id="return-form">
+                <div class="form-group">
+                    <label for="return-address">Adresă ridicare:</label>
+                    <input type="text" id="return-address" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="return-time">Data și ora ridicării:</label>
+                    <input type="datetime-local" id="return-time" required>
+                </div>
+                <button type="submit" class="submit-btn">Programează ridicare</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal pentru editare comandă -->
     <div id="edit-order-modal" class="modal">
         <div class="modal-content">
@@ -62,36 +91,6 @@
                     <input type="datetime-local" id="edit-delivery-time" required>
                 </div>
                 <button type="submit" class="submit-btn">Salvează modificările</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal pentru confirmare livrare -->
-    <div id="delivery-modal" class="modal">
-        <div class="modal-content">
-            <h2>Confirmare livrare</h2>
-            <p>Este necesară ridicarea comenzii (retur)?</p>
-            <div class="modal-buttons">
-                <button id="confirm-with-return" class="modal-btn">DA</button>
-                <button id="confirm-without-return" class="modal-btn">NU</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal pentru programare retur -->
-    <div id="return-modal" class="modal">
-        <div class="modal-content">
-            <h2>Programare ridicare</h2>
-            <form id="return-form">
-                <div class="form-group">
-                    <label for="return-address">Adresă ridicare:</label>
-                    <input type="text" id="return-address" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="return-time">Data și ora ridicării:</label>
-                    <input type="datetime-local" id="return-time" required>
-                </div>
-                <button type="submit" class="submit-btn">Confirmă</button>
             </form>
         </div>
     </div>

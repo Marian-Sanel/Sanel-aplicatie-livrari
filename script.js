@@ -1,48 +1,100 @@
-// Configurare Firebase
-const firebaseConfig = {
-    databaseURL: "https://curse-sanel-default-rtdb.europe-west1.firebasedatabase.app"
-};
+// Configurare GitHub
+const GITHUB_TOKEN = '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'; // TOKENUL tău GitHub
+const GITHUB_REPO = 'Marian-Sanel/panou-comenzi-livrari'; // username + repository
+const DATA_FILE = 'data.json'; // fișierul pe care îl modifici în repo
 
-// Inițializare Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
 
 // Clasa pentru gestionarea comenzilor
 class OrderManager {
     constructor() {
         this.orders = new Map();
         this.timers = new Map(); // Pentru a ține evidența timer-elor
-        this.setupFirebaseListeners();
+        this.loadOrders();
         this.setupEventListeners();
         this.startAutoUpdate();
+        this.startSync();
     }
 
-    // Setează ascultătorii Firebase pentru sincronizare în timp real
-    setupFirebaseListeners() {
-        // Ascultă pentru modificări în comenzile active
-        database.ref('orders').on('value', (snapshot) => {
-            const data = snapshot.val() || {};
-            this.orders.clear();
-            Object.entries(data).forEach(([id, order]) => {
-                this.orders.set(id, order);
+    // Încarcă comenzile din localStorage și sincronizează cu GitHub
+    async loadOrders() {
+        try {
+            // Încearcă să încarce datele din GitHub
+            const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
             });
-            this.updateDisplay();
-        });
 
-        // Ascultă pentru modificări în istoric
-        database.ref('history').on('value', (snapshot) => {
-            const data = snapshot.val() || [];
-            localStorage.setItem('istoric_livrari', JSON.stringify(data));
-        });
+            if (response.ok) {
+                const data = await response.json();
+                const content = JSON.parse(atob(data.content));
+                content.forEach(order => {
+                    this.orders.set(order.id, order);
+                });
+            } else {
+                // Dacă nu există date pe GitHub, încarcă din localStorage
+                const savedOrders = localStorage.getItem('orders');
+                if (savedOrders) {
+                    const orders = JSON.parse(savedOrders);
+                    orders.forEach(order => {
+                        this.orders.set(order.id, order);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Eroare la încărcarea datelor:', error);
+            // Încarcă din localStorage ca backup
+            const savedOrders = localStorage.getItem('orders');
+            if (savedOrders) {
+                const orders = JSON.parse(savedOrders);
+                orders.forEach(order => {
+                    this.orders.set(order.id, order);
+                });
+            }
+        }
+        this.updateDisplay();
     }
 
-    // Salvează comenzile în Firebase
-    saveOrders() {
-        const ordersObject = {};
-        this.orders.forEach((order, id) => {
-            ordersObject[id] = order;
-        });
-        database.ref('orders').set(ordersObject);
+    // Salvează comenzile în localStorage și pe GitHub
+    async saveOrders() {
+        const ordersArray = Array.from(this.orders.values());
+        localStorage.setItem('orders', JSON.stringify(ordersArray));
+
+        try {
+            // Verifică dacă fișierul există pe GitHub
+            const checkResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            const content = btoa(JSON.stringify(ordersArray));
+            let sha = null;
+
+            if (checkResponse.ok) {
+                const data = await checkResponse.json();
+                sha = data.sha;
+            }
+
+            // Actualizează sau creează fișierul pe GitHub
+            await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Actualizare date comenzi',
+                    content: content,
+                    sha: sha
+                })
+            });
+        } catch (error) {
+            console.error('Eroare la salvarea datelor pe GitHub:', error);
+        }
     }
 
     // Generează un ID unic pentru comandă
@@ -95,7 +147,7 @@ class OrderManager {
         this.updateDisplay();
     }
 
-    // Actualizează afișarea comenzilor
+    // Actualizează afișajul comenzilor
     updateDisplay() {
         const grid = document.getElementById('orders-grid');
         grid.innerHTML = '';
@@ -123,7 +175,7 @@ class OrderManager {
     createOrderCard(order) {
         const card = document.createElement('div');
         card.className = `order-card status-${this.getStatusClass(order)}`;
-        
+
         const deliveryTime = new Date(order.deliveryTime);
         const timeRemaining = this.getTimeRemaining(deliveryTime);
 
@@ -245,6 +297,7 @@ class OrderManager {
             const eventName = document.getElementById('event-name').value;
             const address = document.getElementById('delivery-address').value;
             const deliveryTime = document.getElementById('delivery-time').value;
+
             this.addOrder(eventName, address, deliveryTime);
             addOrderModal.style.display = 'none';
             addOrderForm.reset();
@@ -352,6 +405,7 @@ class OrderManager {
                 modal.style.display = 'block';
             });
         }
+
         // Închide modalul de istoric
         const closeHistoryBtn = document.getElementById('close-history-modal');
         if (closeHistoryBtn) {
@@ -359,19 +413,6 @@ class OrderManager {
                 document.getElementById('history-modal').style.display = 'none';
             });
         }
-    }
-
-    // Afișează modalul de confirmare livrare
-    showDeliveryConfirmation(orderId) {
-        const deliveryModal = document.getElementById('delivery-modal');
-        const returnModal = document.getElementById('return-modal');
-        const order = this.orders.get(orderId);
-        
-        deliveryModal.dataset.orderId = orderId;
-        returnModal.dataset.orderId = orderId;
-        document.getElementById('return-address').value = order.address;
-        
-        deliveryModal.style.display = 'block';
     }
 
     // Pornește actualizarea automată
@@ -418,6 +459,19 @@ class OrderManager {
         this.timers.set(timerKey, timer);
     }
 
+    // Afișează modalul de confirmare livrare
+    showDeliveryConfirmation(orderId) {
+        const deliveryModal = document.getElementById('delivery-modal');
+        const returnModal = document.getElementById('return-modal');
+        const order = this.orders.get(orderId);
+        
+        deliveryModal.dataset.orderId = orderId;
+        returnModal.dataset.orderId = orderId;
+        document.getElementById('return-address').value = order.address;
+        
+        deliveryModal.style.display = 'block';
+    }
+
     // Afișează modalul de editare
     showEditModal(orderId) {
         const order = this.orders.get(orderId);
@@ -458,7 +512,7 @@ class OrderManager {
         this.updateDisplay();
     }
 
-    // Salvează o cursă finalizată în istoricul localStorage și, dacă e desktop, și în fișierul fizic
+    // Salvează în istoric
     saveToHistory(order, action) {
         const entry = {
             id: order.id,
@@ -472,30 +526,18 @@ class OrderManager {
             returnCompletedAt: order.returnCompleted && order.status === 'delivered' ? Date.now() : null
         };
 
-        // Salvează în Firebase
-        database.ref('history').once('value', (snapshot) => {
-            const history = snapshot.val() || [];
-            history.push(entry);
-            database.ref('history').set(history);
-        });
+        const history = JSON.parse(localStorage.getItem('istoric_livrari') || '[]');
+        history.push(entry);
+        localStorage.setItem('istoric_livrari', JSON.stringify(history));
     }
 
-    // Funcție pentru exportul istoricului ca fișier JSON
-    exportHistory() {
-        const history = localStorage.getItem('istoric_livrari') || '[]';
-        const blob = new Blob([history], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'istoric_livrari.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    // Pornește sincronizarea automată
+    startSync() {
+        setInterval(async () => {
+            await this.loadOrders();
+        }, 30000); // Sincronizează la fiecare 30 de secunde
     }
 }
 
-// Inițializare aplicație
-document.addEventListener('DOMContentLoaded', () => {
-    new OrderManager();
-}); 
+// Inițializează managerul de comenzi
+const orderManager = new OrderManager(); 
